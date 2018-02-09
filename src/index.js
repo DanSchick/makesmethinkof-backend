@@ -28,7 +28,7 @@ app.get('/api/relation/:id', (req, res) => {
     });
 });
 
-app.put('/api/relation/insert', (req, res) => {
+app.post('/api/relation/insert', (req, res) => {
     pool.query("SELECT * FROM things", (err, response) => {
         console.log(req.body);
         if(err) throw err;
