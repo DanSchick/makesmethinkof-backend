@@ -14,9 +14,9 @@ app.get('/', (req, res) => {
 });
 
 app.get('/api/relation/:id', (req, res) => {
-    client.query('SELECT * FROM things;', (err, res) => {
+    client.query('SELECT * FROM things;', (err, response) => {
         if(err) throw err;
-        res.status(200).json(res);
+        res.status(200).json(response);
     });
 });
 
