@@ -1,5 +1,6 @@
 var express = require('express');
 var app = express();
+var bodyParser = require('body-parser');
 const { Pool } = require('pg');
 const port = process.env.PORT || 5000;
 
@@ -15,7 +16,7 @@ pool.on('error', (err, client) => {
 });
 
 // set up to consume JSONin request
-app.use(express.bodyParser());
+app.use(bodyParser.json());
 
 app.get('/', (req, res) => {
     res.send('Hello, world!');
