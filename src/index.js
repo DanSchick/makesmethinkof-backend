@@ -4,9 +4,17 @@ var bodyParser = require('body-parser');
 const { Pool } = require('pg');
 const port = process.env.PORT || 5000;
 
+let DATABASE_URL;
+if(process.env.NODE_ENV == 'local') {
+    DATABASE_URL = require('../database');
+} else {
+    DATABASE_URL = process.env.DATABASE_URL
+}
+
+
 // set up pool
 const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
+    connectionString: DATABASE_URL,
     ssl: true
 });
 
@@ -30,6 +38,8 @@ app.get('/api/relation/:id', (req, res) => {
 });
 
 app.post('/api/relation/insert', (req, res) => {
+    if(!req.body) {res.status(500).send();}
+
     pool.query("SELECT * FROM things", (err, response) => {
         console.log(req.body);
         if(err) throw err;
