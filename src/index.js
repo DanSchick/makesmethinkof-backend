@@ -23,7 +23,7 @@ pool.on('error', (err, client) => {
     process.exit(-1)
 });
 
-// set up to consume JSONin request
+// set up to consume JSON request from body
 app.use(bodyParser.json());
 
 app.get('/', (req, res) => {
@@ -38,17 +38,52 @@ app.get('/api/relation/:id', (req, res) => {
 });
 
 app.post('/api/relation/insert', (req, res) => {
-    if(!req.body) {res.status(500).send();}
+    if(!req.body || !req.body.firstThing || !req.body.secondThing) {res.status(500).send();}
+    let errors = false;
 
-    pool.query("SELECT * FROM things", (err, response) => {
-        console.log(req.body);
-        if(err) throw err;
-        res.status(200).json(req.body);
+    insertMovie(req.body.firstThing, response => {
+        if(!response) errors = true;
     });
+    insertMovie(req.body.secondThing, response => {
+        if(!response) errors = true;
+    });
+
+    insertRelation(req.body.firstThing, req.body.secondThing, response => {
+        if(!response) errors = true;
+    });
+
+    res.status(200).send();
 });
 
 app.listen(port, function() {
     console.log('listening on ' + port);
 });
+
+function insertMovie(data, callback) {
+    const id = 'imdb' + data.imdbID;
+    // insert row, if it already exists do nothing
+    let query = "INSERT INTO things (id, data) VALUES ('" + id + "', '" + JSON.stringify(data) + "')";
+    query += " ON CONFLICT DO NOTHING;";
+
+    pool.query(query, (err, response) => {
+        if(err) throw err;
+        callback(response);
+    });
+}
+
+function insertRelation(firstThing, secondThing, callback) {
+    console.log('relation insert');
+    const thing1 = 'imdb' + firstThing.imdbID;
+    const thing2 = 'imdb' + secondThing.imdbID;
+    
+    let query = "INSERT INTO relations (firstthing_id, secondthing_id, count) VALUES ('" + thing1 + "', '" + thing2 + "', 1)";
+    query += " ON CONFLICT (firstthing_id, secondthing_id) DO UPDATE SET count = relations.count + 1 WHERE relations.firstthing_id = '" + thing1 + "' AND relations.secondthing_id = '" + thing2 + "';"; 
+
+    pool.query(query, (err, response) => {
+        if(err) throw err;
+        console.log(response);
+        callback(response);
+    });
+}
 
 module.exports = app;
